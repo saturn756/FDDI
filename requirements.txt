@@ -1,12 +1,13 @@
-# --- 核心依赖：必须锁死以兼容旧版环境，解决 errors 报错 ---
+# --- 核心冲突修复：为了兼容 datasets 2.15.0，必须降级 fsspec ---
 huggingface-hub==0.19.4
-transformers==4.26.1
 datasets==2.15.0
+fsspec==2023.10.0
 peft==0.6.2
+transformers==4.26.1
 diffusers==0.24.0
 accelerate==0.25.0
 
-# --- 你的本地原始清单 (去掉 Torch 和 NVIDIA 相关) ---
+# --- 你的本地原始清单 (去掉了已在上方处理的冲突项) ---
 numpy==1.26.4
 Pillow==10.0.1
 gradio==4.44.1
@@ -19,7 +20,6 @@ MarkupSafe==2.1.5
 PyYAML==6.0.1
 requests==2.32.3
 urllib3==2.2.1
-fsspec==2024.6.0
 safetensors==0.4.3
 tokenizers==0.13.3
 regex==2024.5.15
