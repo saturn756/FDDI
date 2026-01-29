@@ -26,13 +26,7 @@ from mimicbrush import MimicBrush_RefNet
 from dataset.data_utils import *
 from modelscope.hub.snapshot_download import snapshot_download
 
-model_dir = snapshot_download('xichen/MimicBrush')
-base_model_path = os.path.join(model_dir, "cleansd/stable-diffusion-inpainting")
-vae_model_path = os.path.join(model_dir, "MimicBrush/sd-vae-ft-mse")
-image_encoder_path = os.path.join(model_dir, "MimicBrush/image_encoder")
-ref_model_path = os.path.join(model_dir, "cleansd/stable-diffusion-v1-5")
-mimicbrush_ckpt = os.path.join(model_dir, "MimicBrush/mimicbrush/mimicbrush.bin")
-depth_model_path = os.path.join(model_dir, "MimicBrush/depth_model/depth_anything_vitb14.pth")
+
 # === import Depth Anything ===
 import sys
 sys.path.append("./depthanything")
@@ -40,7 +34,13 @@ from torchvision.transforms import Compose
 from depthanything.fast_import import depth_anything_model 
 from depthanything.depth_anything.util.transform import Resize, NormalizeImage, PrepareForNet
 
-
+model_dir = snapshot_download('xichen')
+base_model_path = os.path.join(model_dir, "cleansd/stable-diffusion-inpainting")
+vae_model_path = os.path.join(model_dir, "MimicBrush/sd-vae-ft-mse")
+image_encoder_path = os.path.join(model_dir, "MimicBrush/image_encoder")
+ref_model_path = os.path.join(model_dir, "cleansd/stable-diffusion-v1-5")
+mimicbrush_ckpt = os.path.join(model_dir, "MimicBrush/mimicbrush/mimicbrush.bin")
+depth_model_path = os.path.join(model_dir, "MimicBrush/depth_model/depth_anything_vitb14.pth")
 if torch.cuda.is_available():
     device = "cuda"
     dtype = torch.float16
