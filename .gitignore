@@ -1,0 +1,16 @@
+# 排除本地模型缓存
+modelscope/
+temp/
+
+# 排除 Python 编译缓存
+__pycache__/
+*.pyc
+
+# 排除本地虚拟环境 (如果你把环境装在文件夹里了)
+venv/
+.conda/
+
+# 排除隐藏的系统文件
+.DS_Store
+.vscode/
+.idea/

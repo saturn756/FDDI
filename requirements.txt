@@ -1,0 +1,24 @@
+# 基础 UI 与框架 (锁定当前适配的 Gradio 版本)
+gradio==4.44.0
+modelscope
+accelerate==0.25.0
+
+# [cite_start]扩散模型核心组件 (针对 MimicBrush 与 FDDI 加速方案) [cite: 447, 518]
+diffusers==0.24.0
+transformers==4.26.1
+safetensors==0.4.3
+omegaconf==2.1.1
+einops==0.3.0
+
+# [cite_start]图像处理与科学计算 [cite: 518]
+numpy==1.26.4
+Pillow==10.0.1
+opencv-python==4.11.0.86
+scipy==1.15.3
+matplotlib==3.7.5
+
+# 辅助工具与性能评估
+yacs==0.1.8
+huggingface-hub==0.19.4
+requests==2.32.3
+tqdm==4.66.4
