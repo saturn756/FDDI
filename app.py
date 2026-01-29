@@ -354,12 +354,7 @@ custom_css = """
     flex-direction: column !important;
 }
 
-/* 2. 核心修复：强制图片预览区域只占 80% 的高度，把剩下的 20% 锁死给底部的工具栏 */
-#source-editor .image-container {
-    height: 80% !important;
-    flex-grow: 0 !important;
-    background: #2b2b2b !important; /* 深色背景，方便看清画笔 */
-}
+
 
 /* 3. 强制底部的工具栏（笔刷、橡皮擦、重置按钮等）显示在最下方 */
 #source-editor .controls {
