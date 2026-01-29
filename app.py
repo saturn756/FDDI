@@ -334,34 +334,41 @@ def choose_model():
         return "Using original model"
 
 custom_css = """
-/* 1. 强制编辑器和参考图的容器高度一致，并去掉多余的灰色边框 */
+/* 1. 增加总高度，给下方的工具栏留出呼吸空间 */
 #source-editor, #ref-image {
-    height: 512px !important; 
-    border: none !important;
+    height: 620px !important; 
+    min-height: 620px !important;
+    border: 1px solid #ddd !important; /* 保留微弱边框有助于区分界限 */
+    border-radius: 8px !important;
+    overflow: hidden !important;
 }
 
-/* 2. 让编辑器内部的画布撑满整个容器，去掉缩放留白的 padding */
+/* 2. 限制图片容器高度，确保它不把底部的工具栏挤走 */
 #source-editor .image-container {
-    height: 100% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    background: transparent !important;
+    height: 520px !important; /* 比总高度小，留出空间给底部的工具栏 */
+    background: #f0f0f0 !important;
 }
 
-/* 3. 核心修复：强制图片在编辑器中以 cover 或 fill 方式显示，不留黑边 */
+/* 3. 确保图片缩放不留黑边，且不会超出容器 */
 #source-editor img {
-    object-fit: contain !important; /* 或者使用 cover，取决于你是否允许轻微裁剪 */
+    object-fit: contain !important; 
     width: 100% !important;
     height: 100% !important;
 }
 
-/* 4. 挪动那个讨厌的浮动工具栏，防止它遮挡画笔按钮 */
+/* 4. 优化底部工具栏的显示 */
+/* Gradio 4.x 的 ImageEditor 工具栏通常在 .controls 或 .tool-buttons 中 */
+#source-editor .controls {
+    background-color: white !important;
+    padding: 10px !important;
+    border-top: 1px solid #eee !important;
+}
+
+/* 5. 修复浮动按钮遮挡问题 */
 .icon-buttons {
-    display: flex !important;
-    justify-content: center !important;
-    background: rgba(255,255,255,0.8) !important;
-    border-radius: 8px !important;
+    z-index: 10 !important; /* 确保它在最上层 */
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid #ccc !important;
 }
 """
 
