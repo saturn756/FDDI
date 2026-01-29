@@ -58,7 +58,7 @@ if torch.cuda.is_available():
     print("检测到 GPU，使用 CUDA 加速模式。")
 else:
     device = "cpu"
-    dtype = torch.float32 # CPU 模式建议使用 float32 保证稳定性
+    dtype = torch.float16 
     print("未检测到 GPU，已降级至 CPU 模式（仅用于页面预览）。")
 transform = Compose([
     Resize(
