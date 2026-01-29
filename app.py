@@ -34,13 +34,24 @@ from torchvision.transforms import Compose
 from depthanything.fast_import import depth_anything_model 
 from depthanything.depth_anything.util.transform import Resize, NormalizeImage, PrepareForNet
 
-model_dir = snapshot_download('xichen')
-base_model_path = os.path.join(model_dir, "cleansd/stable-diffusion-inpainting")
-vae_model_path = os.path.join(model_dir, "MimicBrush/sd-vae-ft-mse")
-image_encoder_path = os.path.join(model_dir, "MimicBrush/image_encoder")
-ref_model_path = os.path.join(model_dir, "cleansd/stable-diffusion-v1-5")
-mimicbrush_ckpt = os.path.join(model_dir, "MimicBrush/mimicbrush/mimicbrush.bin")
-depth_model_path = os.path.join(model_dir, "MimicBrush/depth_model/depth_anything_vitb14.pth")
+# --- 修正后的模型下载逻辑 ---
+# 1. 下载 MimicBrush 核心权重仓库
+mimic_dir = snapshot_download('xichen/MimicBrush')
+
+# 2. 下载 Stable Diffusion 基础模型仓库 (cleansd)
+# 如果魔塔上 xichen 下确实有 cleansd 这个仓库，则单独下载
+sd_dir = snapshot_download('xichen/cleansd') 
+
+# --- 重新映射路径 (对应你截图中的实际结构) ---
+# 注意：snapshot_download 返回的路径就是仓库根目录
+mimicbrush_ckpt = os.path.join(mimic_dir, "mimicbrush/mimicbrush.bin")
+vae_model_path = os.path.join(mimic_dir, "sd-vae-ft-mse")
+image_encoder_path = os.path.join(mimic_dir, "image_encoder")
+depth_model_path = os.path.join(mimic_dir, "depth_model/depth_anything_vitb14.pth")
+
+# 映射基础 SD 模型路径
+base_model_path = os.path.join(sd_dir, "stable-diffusion-inpainting")
+ref_model_path = os.path.join(sd_dir, "stable-diffusion-v1-5")
 if torch.cuda.is_available():
     device = "cuda"
     dtype = torch.float16
