@@ -1,5 +1,4 @@
-# --- 核心依赖降级（解决 huggingface_hub.errors 找不到的问题） ---
-# 必须显式指定这几个版本，否则魔塔会用它预装的新版，导致和你的 hub 0.19.4 冲突
+# --- 核心依赖：必须锁死以兼容旧版环境，解决 errors 报错 ---
 huggingface-hub==0.19.4
 transformers==4.26.1
 datasets==2.15.0
@@ -7,10 +6,7 @@ peft==0.6.2
 diffusers==0.24.0
 accelerate==0.25.0
 
-# --- 你的本地原始清单 (1:1 还原) ---
-torch==2.8.0
-torchvision==0.23.0
-torchaudio==2.8.0
+# --- 你的本地原始清单 (去掉 Torch 和 NVIDIA 相关) ---
 numpy==1.26.4
 Pillow==10.0.1
 gradio==4.44.1
@@ -35,14 +31,7 @@ uvicorn==0.30.0
 pydantic==2.7.3
 pydantic_core==2.18.4
 
-# --- GPU 相关库 (确保在魔塔 GPU 实例上能跑) ---
-nvidia-cublas-cu12==12.8.4.1
-nvidia-cuda-runtime-cu12==12.8.90
-nvidia-cudnn-cu12==9.10.2.21
-nvidia-nccl-cu12==2.27.3
-triton==3.4.0
-
-# --- 其他必要组件 ---
+# --- 其它 FDDI 项目必要组件 ---
 opencv-python-headless==4.11.0.86
 einops==0.3.0
 omegaconf==2.1.1
