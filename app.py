@@ -423,7 +423,8 @@ with gr.Blocks(css=custom_css) as demo:
     with gr.Row():
         gr.Examples(
         examples=[
-            
+            ["examples/source/wood.png", "examples/reference/wood_1.png",0],
+            ["examples/source/wood.png", "examples/reference/wood_2.png",0]
         ],
 
         inputs=[
