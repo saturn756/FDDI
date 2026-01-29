@@ -385,7 +385,7 @@ custom_css = """
 
 with gr.Blocks(css=custom_css) as demo:
     with gr.Column():
-        gr.Markdown("FDDI:a faster MimicBrush with deepcache and some our improvements")
+        gr.Markdown("# FDDI:a faster MimicBrush with deepcache and some our improvements")
         with gr.Row():
             baseline_gallery = gr.Gallery(
             label='Output (点击下方小图切换查看)', 
