@@ -10,4 +10,10 @@ model_configs = {
     'vits': {'encoder': 'vits', 'features': 64, 'out_channels': [48, 96, 192, 384]}
 }
 encoder = 'vitb' # or 'vitb', 'vits'
-depth_anything_model = DepthAnything(model_configs[encoder]).cuda().eval()
+
+# --- 核心修复：自动检测设备 ---
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print(f"DepthAnything 子模块正在使用设备: {device}")
+
+# 将原本硬编码的 .cuda() 改为 .to(device)
+depth_anything_model = DepthAnything(model_configs[encoder]).to(device).eval()
