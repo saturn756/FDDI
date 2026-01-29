@@ -195,6 +195,7 @@ pipe = MimicBrushPipeline.from_pretrained(
     unet=unet,
     feature_extractor=None,
     safety_checker=None,
+    low_cpu_mem_usage=True
 )
 pipe.enable_attention_slicing()
 dc_pipe = MimicBrushPipeline_DC.from_pretrained(
@@ -205,6 +206,7 @@ dc_pipe = MimicBrushPipeline_DC.from_pretrained(
     unet=dc_unet,
     feature_extractor=None,
     safety_checker=None,
+    low_cpu_mem_usage=True
 )
 dc_pipe.enable_attention_slicing()
 
