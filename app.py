@@ -39,6 +39,16 @@ sys.path.append("./depthanything")
 from torchvision.transforms import Compose
 from depthanything.fast_import import depth_anything_model 
 from depthanything.depth_anything.util.transform import Resize, NormalizeImage, PrepareForNet
+
+
+if torch.cuda.is_available():
+    device = "cuda"
+    dtype = torch.float16
+    print("检测到 GPU，使用 CUDA 加速模式。")
+else:
+    device = "cpu"
+    dtype = torch.float32 # CPU 模式建议使用 float32 保证稳定性
+    print("未检测到 GPU，已降级至 CPU 模式（仅用于页面预览）。")
 transform = Compose([
     Resize(
         width=518,
@@ -56,9 +66,7 @@ depth_anything_model.load_state_dict(torch.load(depth_model_path))
 
 
 
-# === load the checkpoint ===
 
-device = "cuda"
 
 
 
@@ -157,9 +165,9 @@ noise_scheduler = DDIMScheduler(
 )
 
 
-vae = AutoencoderKL.from_pretrained(vae_model_path).to(dtype=torch.float16)
-unet = UNet2DConditionModel.from_pretrained(base_model_path, subfolder="unet", in_channels=13, low_cpu_mem_usage=False, ignore_mismatched_sizes=True).to(dtype=torch.float16)
-dc_unet = UNet2DConditionModel_DC.from_pretrained(base_model_path, subfolder="unet", in_channels=13, low_cpu_mem_usage=False, ignore_mismatched_sizes=True).to(dtype=torch.float16)
+vae = AutoencoderKL.from_pretrained(vae_model_path).to(dtype=dtype)
+unet = UNet2DConditionModel.from_pretrained(base_model_path, subfolder="unet", in_channels=13, low_cpu_mem_usage=False, ignore_mismatched_sizes=True).to(dtype=dtype)
+dc_unet = UNet2DConditionModel_DC.from_pretrained(base_model_path, subfolder="unet", in_channels=13, low_cpu_mem_usage=False, ignore_mismatched_sizes=True).to(dtype=dtype)
 
 
 from DeepCache.DeepCache.sd.apply_dyna import inject_dynamask_processor
@@ -170,7 +178,7 @@ inject_dynamask_processor(dc_unet)
 
 pipe = MimicBrushPipeline.from_pretrained(
     base_model_path,
-    torch_dtype=torch.float16,
+    torch_dtype=dtype,
     scheduler=noise_scheduler,
     vae=vae,
     unet=unet,
@@ -179,7 +187,7 @@ pipe = MimicBrushPipeline.from_pretrained(
 )
 dc_pipe = MimicBrushPipeline_DC.from_pretrained(
     base_model_path,
-    torch_dtype=torch.float16,
+    torch_dtype=dtype,
     scheduler=noise_scheduler,
     vae=vae,
     unet=dc_unet,
@@ -188,7 +196,7 @@ dc_pipe = MimicBrushPipeline_DC.from_pretrained(
 )
 
 depth_guider = DepthGuider()
-referencenet = ReferenceNet.from_pretrained(ref_model_path, subfolder="unet").to(dtype=torch.float16)
+referencenet = ReferenceNet.from_pretrained(ref_model_path, subfolder="unet").to(dtype=dtype)
 mimicbrush_model = MimicBrush_RefNet(pipe, image_encoder_path, mimicbrush_ckpt,  depth_anything_model, depth_guider, referencenet, device)
 dc_mimicbrush_model = MimicBrush_RefNet(dc_pipe, image_encoder_path, mimicbrush_ckpt, depth_anything_model, depth_guider, referencenet, device)
 mask_processor = VaeImageProcessor(vae_scale_factor=1, do_normalize=False, do_binarize=True, do_convert_grayscale=True)
