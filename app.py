@@ -433,7 +433,8 @@ with gr.Blocks(css=custom_css) as demo:
                     label="Reference", 
                     sources="upload", 
                     type="pil", 
-                    elem_id="ref-image" # 对应 CSS
+                    elem_id="ref-image", # 对应 CSS
+                    height=700,
                 )
         choose_model_button = gr.Button(value=" DeepCache ")
         run_local_button = gr.Button(value="Run")
