@@ -58,7 +58,7 @@ if torch.cuda.is_available():
     print("检测到 GPU，使用 CUDA 加速模式。")
 else:
     device = "cpu"
-    dtype = torch.float16 
+    dtype = torch.bfloat16 
     print("未检测到 GPU，已降级至 CPU 模式（仅用于页面预览）。")
 transform = Compose([
     Resize(
@@ -196,6 +196,7 @@ pipe = MimicBrushPipeline.from_pretrained(
     feature_extractor=None,
     safety_checker=None,
 )
+pipe.enable_attention_slicing()
 dc_pipe = MimicBrushPipeline_DC.from_pretrained(
     base_model_path,
     torch_dtype=dtype,
@@ -205,6 +206,7 @@ dc_pipe = MimicBrushPipeline_DC.from_pretrained(
     feature_extractor=None,
     safety_checker=None,
 )
+dc_pipe.enable_attention_slicing()
 
 depth_guider = DepthGuider()
 referencenet = ReferenceNet.from_pretrained(ref_model_path, subfolder="unet").to(dtype=dtype)
