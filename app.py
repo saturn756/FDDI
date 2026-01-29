@@ -345,41 +345,46 @@ def choose_model():
         return "Using original model"
 
 custom_css = """
-/* 1. 增加总高度，给下方的工具栏留出呼吸空间 */
-#source-editor, #ref-image {
-    height: 620px !important; 
-    min-height: 620px !important;
-    border: 1px solid #ddd !important; /* 保留微弱边框有助于区分界限 */
-    border-radius: 8px !important;
+/* 1. 限制整个编辑器的外壳高度 */
+#source-editor {
+    height: 700px !important; 
+    max-height: 700px !important;
     overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
-/* 2. 限制图片容器高度，确保它不把底部的工具栏挤走 */
+/* 2. 核心修复：强制图片预览区域只占 80% 的高度，把剩下的 20% 锁死给底部的工具栏 */
 #source-editor .image-container {
-    height: 520px !important; /* 比总高度小，留出空间给底部的工具栏 */
-    background: #f0f0f0 !important;
+    height: 80% !important;
+    flex-grow: 0 !important;
+    background: #2b2b2b !important; /* 深色背景，方便看清画笔 */
 }
 
-/* 3. 确保图片缩放不留黑边，且不会超出容器 */
+/* 3. 强制底部的工具栏（笔刷、橡皮擦、重置按钮等）显示在最下方 */
+#source-editor .controls {
+    height: 120px !important; /* 显式给工具栏留出足够空间 */
+    background: white !important;
+    padding: 10px !important;
+    border-top: 1px solid #ddd !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 100 !important;
+}
+
+/* 4. 解决图片溢出：让 Canvas 乖乖缩放 */
+#source-editor canvas {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+}
+
+/* 5. 确保图片在预览时不被拉伸 */
 #source-editor img {
-    object-fit: contain !important; 
+    object-fit: contain !important;
     width: 100% !important;
     height: 100% !important;
-}
-
-/* 4. 优化底部工具栏的显示 */
-/* Gradio 4.x 的 ImageEditor 工具栏通常在 .controls 或 .tool-buttons 中 */
-#source-editor .controls {
-    background-color: white !important;
-    padding: 10px !important;
-    border-top: 1px solid #eee !important;
-}
-
-/* 5. 修复浮动按钮遮挡问题 */
-.icon-buttons {
-    z-index: 10 !important; /* 确保它在最上层 */
-    background: rgba(255, 255, 255, 0.9) !important;
-    border: 1px solid #ccc !important;
 }
 """
 
@@ -424,7 +429,9 @@ with gr.Blocks(css=custom_css) as demo:
                     layers=False,
                     sources=["upload"],
                     interactive=True,
-                    canvas_size=(512, 512)
+                    canvas_size=(512, 512),
+                    height=700,
+                    
                 )
             with gr.Column(scale=1):
                 ref = gr.Image(
