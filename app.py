@@ -35,7 +35,18 @@ from depthanything.fast_import import depth_anything_model
 from depthanything.depth_anything.util.transform import Resize, NormalizeImage, PrepareForNet
 
 # --- 修正后的模型下载逻辑 ---
+
+
+try:
+   
+    model_dir = snapshot_download('Saturn666/FDDI')
+    print(f"✅ 下载成功，路径为: {model_dir}")
+except Exception as e:
+    print(f"❌ 下载失败，请检查环境变量或权限: {e}")
+    
 # 1. 下载 MimicBrush 核心权重仓库
+
+
 mimic_dir = snapshot_download('xichen/MimicBrush')
 
 # 2. 下载 Stable Diffusion 基础模型仓库 (cleansd)
