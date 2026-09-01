@@ -29,6 +29,7 @@ from models.pipeline_deepcachemimicbrush import MimicBrushPipeline as MimicBrush
 from models.ReferenceNet import ReferenceNet
 from models.depth_guider import DepthGuider
 from mimicbrush import MimicBrush_RefNet
+from fddi_config import FDDI_PAPER_CONFIG
 from dataset.data_utils import *
 
 try:
@@ -268,7 +269,15 @@ mask_processor = VaeImageProcessor(vae_scale_factor=1, do_normalize=False, do_bi
 using_deepcache = True
 
 
-def infer_single(ref_image, target_image, target_mask, seed = -1, num_inference_steps=50, guidance_scale = 5, enable_shape_control = False):
+def infer_single(
+    ref_image,
+    target_image,
+    target_mask,
+    seed=-1,
+    num_inference_steps=FDDI_PAPER_CONFIG["num_inference_steps"],
+    guidance_scale=FDDI_PAPER_CONFIG["guidance_scale"],
+    enable_shape_control=False,
+):
     #return ref_image
     """
     mask: 0/1 1-channel  np.array
@@ -304,12 +313,28 @@ def infer_single(ref_image, target_image, target_mask, seed = -1, num_inference_
         depth_image = depth_image * 0
 
     mask_pt = mask_processor.preprocess(target_mask, height=512, width=512)
-    if using_deepcache:
-        pred, depth_pred = dc_mimicbrush_model.generate(pil_image=ref_image, depth_image = depth_image, num_samples=1, num_inference_steps=num_inference_steps,
-                            seed=seed, image=target_image, mask_image=mask_pt, strength=1.0, guidance_scale=guidance_scale)
-    else:
-        pred, depth_pred = mimicbrush_model.generate(pil_image=ref_image, depth_image = depth_image, num_samples=1, num_inference_steps=num_inference_steps,
-                                seed=seed, image=target_image, mask_image=mask_pt, strength=1.0, guidance_scale=guidance_scale)
+    fddi_kwargs = {
+        "lpf_threshold": FDDI_PAPER_CONFIG["lpf_threshold"],
+        "interval_step": FDDI_PAPER_CONFIG["cache_interval"],
+        "lpf_sigma": FDDI_PAPER_CONFIG["lpf_sigma"],
+        "lpf_kernel": FDDI_PAPER_CONFIG["lpf_kernel"],
+        "alpha": FDDI_PAPER_CONFIG["alpha"],
+        "skip_boost_factor": FDDI_PAPER_CONFIG["skip_boost_factor"],
+        "uniform": FDDI_PAPER_CONFIG["uniform"],
+    }
+    model = dc_mimicbrush_model if using_deepcache else mimicbrush_model
+    pred, depth_pred = model.generate(
+        pil_image=ref_image,
+        depth_image=depth_image,
+        num_samples=1,
+        num_inference_steps=num_inference_steps,
+        seed=seed,
+        image=target_image,
+        mask_image=mask_pt,
+        strength=1.0,
+        guidance_scale=guidance_scale,
+        **fddi_kwargs,
+    )
 
 
     depth_pred = F.interpolate(depth_pred, size=(512,512), mode = 'bilinear', align_corners=True)[0][0]
@@ -437,8 +462,20 @@ with gr.Blocks(css=custom_css) as demo:
         )
             with gr.Accordion("Advanced Option", open=True):
                 num_samples = 1
-                ddim_steps = gr.Slider(label="Steps", minimum=1, maximum=100, value=50, step=1)
-                scale = gr.Slider(label="Guidance Scale", minimum=-30.0, maximum=30.0, value=5.0, step=0.1)
+                ddim_steps = gr.Slider(
+                    label="Steps",
+                    minimum=1,
+                    maximum=100,
+                    value=FDDI_PAPER_CONFIG["num_inference_steps"],
+                    step=1,
+                )
+                scale = gr.Slider(
+                    label="Guidance Scale",
+                    minimum=-30.0,
+                    maximum=30.0,
+                    value=FDDI_PAPER_CONFIG["guidance_scale"],
+                    step=0.1,
+                )
                 seed = gr.Slider(label="Seed", minimum=-1, maximum=999999999, step=1, value=-1)
                 enable_shape_control = gr.Checkbox(label='Keep the original shape', value=False, interactive = True)
                 

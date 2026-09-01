@@ -16,6 +16,7 @@ if is_torch2_available():
 else:
     from .attention_processor import AttnProcessor
 from .resampler import LinearResampler
+from fddi_config import FDDI_PAPER_CONFIG
 
 
 def configure_unet_attention(unet):
@@ -98,14 +99,15 @@ class MimicBrush_RefNet:
         num_samples=4,
         seed=None,
         image = None,
-        guidance_scale=7.5,
-        num_inference_steps=30,
-        lpf_threshold=200,
-        interval_step = 5,
-        lpf_sigma = 0.5,
-        lpf_kernel = 3,
-        alpha = 0.5,
-        skip_boost_factor = 1.0,
+        guidance_scale=FDDI_PAPER_CONFIG["guidance_scale"],
+        num_inference_steps=FDDI_PAPER_CONFIG["num_inference_steps"],
+        lpf_threshold=FDDI_PAPER_CONFIG["lpf_threshold"],
+        interval_step=FDDI_PAPER_CONFIG["cache_interval"],
+        lpf_sigma=FDDI_PAPER_CONFIG["lpf_sigma"],
+        lpf_kernel=FDDI_PAPER_CONFIG["lpf_kernel"],
+        alpha=FDDI_PAPER_CONFIG["alpha"],
+        skip_boost_factor=FDDI_PAPER_CONFIG["skip_boost_factor"],
+        uniform=FDDI_PAPER_CONFIG["uniform"],
         **kwargs,
     ):
         if pil_image is not None:
@@ -141,11 +143,11 @@ class MimicBrush_RefNet:
             depth_feature = depth_feature,
 
             cache_interval=interval_step, 
-            cache_layer_id=0, 
-            cache_block_id=0,
-            uniform=False, 
-            pow=1.4, 
-            center=15,
+            cache_layer_id=FDDI_PAPER_CONFIG["cache_layer_id"],
+            cache_block_id=FDDI_PAPER_CONFIG["cache_block_id"],
+            uniform=uniform,
+            pow=None,
+            center=None,
             output_all_sequence = False,
 
 

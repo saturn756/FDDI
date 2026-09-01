@@ -65,8 +65,8 @@ class DynaMaskAttnProcessor:
             return self._standard_attention(attn, hidden_states, encoder_hidden_states, attention_mask, scale)
 
         # 3. 判断是否进入 Refinement Phase (且 Mask 存在)
-        # 逻辑：只有在 timestep <= threshold (后期) 且提供了 Mask 时，才开启加速
-        is_refinement = (timestep is not None) and (timestep <= lpf_threshold)
+        # 逻辑：只有在 timestep < threshold (后期) 且提供了 Mask 时，才开启加速
+        is_refinement = (timestep is not None) and (timestep < lpf_threshold)
         
         if not is_refinement or dyna_mask is None:
             # Phase 1 (结构期) 或 无 Mask -> 清空缓存，跑标准全量 Self-Attention

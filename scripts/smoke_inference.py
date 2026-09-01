@@ -21,6 +21,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "depthanything"))
 
 from diffusers import AutoencoderKL, DDIMScheduler  # noqa: E402
 from diffusers.image_processor import VaeImageProcessor  # noqa: E402
+from fddi_config import FDDI_PAPER_CONFIG  # noqa: E402
 
 from DeepCache.DeepCache.sd.apply_dyna import inject_dynamask_processor  # noqa: E402
 from DeepCache.DeepCache.sd.unet_2d_condition import (  # noqa: E402
@@ -60,7 +61,12 @@ def square_image(image: Image.Image) -> Image.Image:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--steps", type=int, default=1)
+    parser.add_argument(
+        "--steps",
+        type=int,
+        default=FDDI_PAPER_CONFIG["num_inference_steps"],
+        help="Denoising steps; defaults to the paper configuration.",
+    )
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
@@ -168,13 +174,14 @@ def main() -> int:
             image=source,
             mask_image=mask_input,
             strength=1.0,
-            guidance_scale=5.0,
-            interval_step=2,
-            lpf_threshold=200,
-            lpf_sigma=0.8,
-            lpf_kernel=3,
-            alpha=0.5,
-            skip_boost_factor=1.4,
+            guidance_scale=FDDI_PAPER_CONFIG["guidance_scale"],
+            interval_step=FDDI_PAPER_CONFIG["cache_interval"],
+            lpf_threshold=FDDI_PAPER_CONFIG["lpf_threshold"],
+            lpf_sigma=FDDI_PAPER_CONFIG["lpf_sigma"],
+            lpf_kernel=FDDI_PAPER_CONFIG["lpf_kernel"],
+            alpha=FDDI_PAPER_CONFIG["alpha"],
+            skip_boost_factor=FDDI_PAPER_CONFIG["skip_boost_factor"],
+            uniform=FDDI_PAPER_CONFIG["uniform"],
         )
 
     output = args.output or root / "results/smoke_test/fddi_deepcache_smoke.png"

@@ -32,11 +32,27 @@ The DeepCache integration is implemented directly in the FDDI source tree. The
 original and accelerated pipelines can be selected from the Gradio interface.
 The default mode is DeepCache.
 
+The paper-aligned implementation details, configuration, reported tables, and
+reproduction procedure are collected in
+[`docs/PAPER_REPRODUCTION.md`](docs/PAPER_REPRODUCTION.md). The paper is by
+Shufan Zhou and Mingjie Sun from the School of Computer Science and Technology,
+Soochow University.
+
+![Qualitative comparison of the baseline, DeepCache, and FDDI](docs/assets/fddi_comparison_grid.png)
+
+At a high level, FDDI separates the cached structural stream from fresh detail
+features during the refinement window `t < 200`: Masked LPF cleans cached
+features inside the edit mask, while Skip Connect Booster amplifies current
+skip features in the same region. The paper configuration uses 40 DDIM steps,
+a uniform 1:20 cache schedule, LPF `(kernel=3, sigma=0.8, alpha=0.5)`, and a
+Booster factor of `1.4`.
+
 ## Repository layout
 
 ```text
 FDDI/
   app.py                                  Gradio demo
+  fddi_config.py                          Paper-aligned default settings
   models/                                 MimicBrush pipelines and ReferenceNet
   mimicbrush/                             Reference-image feature wrapper
   DeepCache/                              Vendored DeepCache implementation
@@ -199,6 +215,23 @@ Hugging Face cache. It writes a side-by-side baseline/DeepCache comparison.
   installation. It is not a formal speed or quality benchmark.
 - Bulk MVTec and VisA outputs remain in the external `results/` directory and
   are not committed to GitHub.
+- The paper reports MVTec/VisA quality and timing tables; see
+  [`docs/PAPER_REPRODUCTION.md`](docs/PAPER_REPRODUCTION.md) for the exact
+  values, metric directions, and the GFLOPs accounting note.
+- DynaMask sparse self-attention is included as an implementation-level
+  runtime optimization. It was not separately reported in the paper ablation
+  table, so new benchmark claims should be rerun after changing this path.
+
+## Citation
+
+```bibtex
+@misc{zhou2026fddi,
+  title  = {面向零样本工业缺陷生成的频率解耦细节注入加速网络},
+  author = {Shufan Zhou and Mingjie Sun},
+  year   = {2026},
+  note   = {Research manuscript, Soochow University}
+}
+```
 
 ## License and third-party terms
 

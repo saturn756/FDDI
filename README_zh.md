@@ -29,11 +29,24 @@ FDDI 的主要组成部分如下：
 DeepCache 集成代码直接保存在 FDDI 源码树中。Gradio 界面可以在原始
 MimicBrush 管线和加速管线之间切换，默认使用 DeepCache。
 
+论文对应的实现细节、统一配置、论文中报告的结果表和复现流程见
+[`docs/PAPER_REPRODUCTION.md`](docs/PAPER_REPRODUCTION.md)。论文作者为
+周树帆、孙铭杰，单位为苏州大学计算机科学与技术学院。
+
+从整体上看，FDDI 在精细化阶段 `t < 200` 将缓存的结构流与当前步的细节
+特征分开处理：掩码引导的 LPF 只清洗编辑区域内的缓存特征，Skip Connect
+Booster 则增强同一区域的新鲜跳跃连接特征。论文配置为 40 步 DDIM、均匀
+1:20 缓存策略、LPF `(kernel=3, sigma=0.8, alpha=0.5)` 和 Booster 系数
+`1.4`。
+
+![Baseline、DeepCache 与 FDDI 定性对比](docs/assets/fddi_comparison_grid.png)
+
 ## 仓库结构
 
 ```text
 FDDI/
   app.py                                  Gradio 演示程序
+  fddi_config.py                          与论文对齐的默认配置
   models/                                 MimicBrush 管线和 ReferenceNet
   mimicbrush/                             参考图像特征处理封装
   DeepCache/                              内置的 DeepCache 实现
@@ -190,6 +203,22 @@ DeepCache 结果的并排对比图。
 - 当前冒烟测试用于验证生成成功和 DynaMask 安装，不是正式的速度或质量
   基准测试。
 - MVTec 和 VisA 的大批量结果保留在外部 `results/` 目录，不提交到 GitHub。
+- 论文中的 MVTec/VisA 质量与耗时表、GFLOPs 统计口径和全部复现参数见
+  [`docs/PAPER_REPRODUCTION.md`](docs/PAPER_REPRODUCTION.md)。
+- 加速管线中还包含 DynaMask 稀疏自注意力，这是实现层的运行时优化；论文
+  消融表没有将其单独报告为组件。修改该路径后，需要重新跑基准，不能直接
+  沿用论文数字。
+
+## 引用
+
+```bibtex
+@misc{zhou2026fddi,
+  title  = {面向零样本工业缺陷生成的频率解耦细节注入加速网络},
+  author = {Shufan Zhou and Mingjie Sun},
+  year   = {2026},
+  note   = {Research manuscript, Soochow University}
+}
+```
 
 ## 协议和第三方条款
 

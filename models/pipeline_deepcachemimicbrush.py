@@ -35,6 +35,7 @@ from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionS
 from models.ReferenceNet_attention import ReferenceNetAttention
 from DeepCache.DeepCache.sd.unet_2d_condition import UNet2DConditionModel
 from DeepCache.DeepCache.sd.pipeline_utils import DiffusionPipeline
+from fddi_config import FDDI_PAPER_CONFIG
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 def sample_gaussian_centered(n=1000, sample_size=100, std_dev=100):
@@ -887,8 +888,8 @@ class MimicBrushPipeline(
         height: Optional[int] = None,
         width: Optional[int] = None,
         strength: float = 1.0,
-        num_inference_steps: int = 50,
-        guidance_scale: float = 7.5,
+        num_inference_steps: int = FDDI_PAPER_CONFIG["num_inference_steps"],
+        guidance_scale: float = FDDI_PAPER_CONFIG["guidance_scale"],
         negative_prompt: Optional[Union[str, List[str]]] = None,
         num_images_per_prompt: Optional[int] = 1,
         eta: float = 0.0,
@@ -908,19 +909,19 @@ class MimicBrushPipeline(
         depth_feature = None,
 
 
-        cache_interval: int = 1,
-        cache_layer_id: int = None,
-        cache_block_id: int = None,
-        uniform: bool = True,
+        cache_interval: int = FDDI_PAPER_CONFIG["cache_interval"],
+        cache_layer_id: int = FDDI_PAPER_CONFIG["cache_layer_id"],
+        cache_block_id: int = FDDI_PAPER_CONFIG["cache_block_id"],
+        uniform: bool = FDDI_PAPER_CONFIG["uniform"],
         pow: float = None,
         center: int = None,
 
 
-        lpf_sigma:float = 1.5,
-        lpf_kernel:int = 5,
-        lpf_threshold:int = 200,
-        alpha:float = 0.5,
-        skip_boost_factor:float = 1.0,
+        lpf_sigma: float = FDDI_PAPER_CONFIG["lpf_sigma"],
+        lpf_kernel: int = FDDI_PAPER_CONFIG["lpf_kernel"],
+        lpf_threshold: int = FDDI_PAPER_CONFIG["lpf_threshold"],
+        alpha: float = FDDI_PAPER_CONFIG["alpha"],
+        skip_boost_factor: float = FDDI_PAPER_CONFIG["skip_boost_factor"],
 
         output_all_sequence: bool = False,
 

@@ -1037,8 +1037,8 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
             sample = cached_deep_feature
 
             # === 全局干预窗口检查 ===
-            # 只有在当前步数小于等于设定的阈值时，才考虑启用 LPF 或 Boost
-            if cur_t_val <= lpf_threshold:
+            # 只有在当前步数小于设定的阈值时，才考虑启用 LPF 或 Boost
+            if cur_t_val < lpf_threshold:
                 
                 # --- Part A: LPF (Low-Pass Filtering) 模块 ---
                 # 开关逻辑：如果 kernel 和 sigma 都为 0，则视为关闭 LPF
@@ -1141,7 +1141,7 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
             
             # # === 3. 频域分离与注入 (USM Injection) ===
             # # 只有在阈值内才执行
-            # if cur_t_val <= lpf_threshold:
+            # if cur_t_val < lpf_threshold:
                 
             #     # A. 准备工具
             #     from torchvision.transforms import GaussianBlur

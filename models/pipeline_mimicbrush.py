@@ -33,6 +33,7 @@ from diffusers.pipelines.pipeline_utils import DiffusionPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionPipelineOutput
 from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionSafetyChecker
 from models.ReferenceNet_attention import ReferenceNetAttention
+from fddi_config import FDDI_PAPER_CONFIG
 
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
@@ -832,8 +833,8 @@ class MimicBrushPipeline(
         height: Optional[int] = None,
         width: Optional[int] = None,
         strength: float = 1.0,
-        num_inference_steps: int = 50,
-        guidance_scale: float = 7.5,
+        num_inference_steps: int = FDDI_PAPER_CONFIG["num_inference_steps"],
+        guidance_scale: float = FDDI_PAPER_CONFIG["guidance_scale"],
         negative_prompt: Optional[Union[str, List[str]]] = None,
         num_images_per_prompt: Optional[int] = 1,
         eta: float = 0.0,
