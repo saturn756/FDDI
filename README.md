@@ -1,5 +1,7 @@
 # FDDI: Fast MimicBrush with DeepCache
 
+[English](README.md) | [中文](README_zh.md)
+
 FDDI is a research implementation for reference-guided image editing and
 industrial anomaly image generation. It is built from the original
 [MimicBrush](https://github.com/ali-vilab/MimicBrush) inference code and
