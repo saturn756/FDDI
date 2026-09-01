@@ -19,9 +19,9 @@ FDDI_assets/
   cache/temp_fid_crops/
 ```
 
-On the research server, this directory is `/home/zsf/FDDI_assets`. The old
-paths under `/home/zsf/MimicBrush` are compatibility symlinks and remain valid
-for the existing benchmark scripts.
+On the research server, the asset root is kept outside the source checkout
+and can be selected with `FDDI_ASSET_ROOT`. Existing legacy benchmark paths may
+be compatibility symlinks to the same asset root.
 
 The repository does not include model weights, full datasets, temporary cache
 files, or bulk-generated images. Keep these assets out of GitHub and back them
