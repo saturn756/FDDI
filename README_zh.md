@@ -40,6 +40,11 @@ Booster 则增强同一区域的新鲜跳跃连接特征。论文配置为 40 �
 
 ![Baseline、DeepCache 与 FDDI 定性对比](docs/assets/fddi_comparison_grid.png)
 
+**FDDI 结构图。** 加速路径复用缓存的深层特征，在精细化阶段对缓存流应用
+掩码引导的 LPF，并增强编辑区域内当前时间步的新鲜跳跃连接特征。
+
+![FDDI 结构图](docs/assets/fddi_structure.png)
+
 ## 仓库结构
 
 ```text

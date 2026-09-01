@@ -38,6 +38,12 @@ reproduction procedure are collected in
 
 ![Qualitative comparison of the baseline, DeepCache, and FDDI](docs/assets/fddi_comparison_grid.png)
 
+**FDDI architecture.** The accelerated path reuses cached deep features,
+applies Masked LPF to the refinement stream, and boosts fresh skip-connection
+features inside the edit mask.
+
+![FDDI architecture](docs/assets/fddi_structure.png)
+
 At a high level, FDDI separates the cached structural stream from fresh detail
 features during the refinement window `t < 200`: Masked LPF cleans cached
 features inside the edit mask, while Skip Connect Booster amplifies current
