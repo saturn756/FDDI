@@ -1,3 +1,6 @@
+import os
+os.environ.setdefault("GRADIO_ANALYTICS_ENABLED", "False")
+
 import gradio as gr
 import torch
 import torch.nn.functional as F
@@ -8,7 +11,10 @@ import cv2
 from PIL import Image
 import numpy as np
 import json
-import os
+
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+import sys
+sys.path.insert(0, PROJECT_ROOT)
 #
 from diffusers import StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipelineLegacy, StableDiffusionInpaintPipeline, DDIMScheduler, AutoencoderKL
 from diffusers import AutoencoderKL, DDPMScheduler, UNet2DConditionModel, DDIMScheduler
@@ -24,34 +30,68 @@ from models.ReferenceNet import ReferenceNet
 from models.depth_guider import DepthGuider
 from mimicbrush import MimicBrush_RefNet
 from dataset.data_utils import *
-from modelscope.hub.snapshot_download import snapshot_download
+
+try:
+    from modelscope.hub.snapshot_download import snapshot_download
+except ImportError:
+    snapshot_download = None
 
 
 # === import Depth Anything ===
-import sys
-sys.path.append("./depthanything")
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "depthanything"))
 from torchvision.transforms import Compose
 from depthanything.fast_import import depth_anything_model 
 from depthanything.depth_anything.util.transform import Resize, NormalizeImage, PrepareForNet
 
-# --- 修正后的模型下载逻辑 ---
+def resolve_asset_root():
+    """Find the external runtime assets without hard-coding a machine path."""
+    configured_root = os.getenv("FDDI_ASSET_ROOT")
+    candidates = [configured_root] if configured_root else []
+    candidates.extend([
+        os.path.join(PROJECT_ROOT, "..", "FDDI_assets"),
+        os.path.join(PROJECT_ROOT, "assets_runtime"),
+    ])
+    for candidate in candidates:
+        if candidate:
+            candidate = os.path.abspath(os.path.expanduser(candidate))
+            if os.path.isdir(candidate):
+                return candidate
+    return None
 
 
-try:
-   
-    model_dir = snapshot_download('Saturn666/FDDI')
-    print(f"✅ 下载成功，路径为: {model_dir}")
-except Exception as e:
-    print(f"❌ 下载失败，请检查环境变量或权限: {e}")
-    
-# 1. 下载 MimicBrush 核心权重仓库
+ASSET_ROOT = resolve_asset_root()
 
 
-mimic_dir = snapshot_download('xichen/MimicBrush')
+def resolve_model_dir(env_name, model_id):
+    """Use a local checkout when configured, otherwise download from ModelScope."""
+    local_dir = os.getenv(env_name)
+    if not local_dir and ASSET_ROOT:
+        local_dir = os.path.join(
+            ASSET_ROOT,
+            "models",
+            "modelscope",
+            "xichen",
+            "MimicBrush" if env_name == "FDDI_MIMICBRUSH_DIR" else "cleansd",
+        )
+    if local_dir:
+        local_dir = os.path.abspath(os.path.expanduser(local_dir))
+        if not os.path.isdir(local_dir):
+            raise FileNotFoundError(f"{env_name} does not point to a directory: {local_dir}")
+        return local_dir
+    if snapshot_download is None:
+        raise RuntimeError(
+            f"{env_name} is not set and ModelScope is not installed. "
+            "Set FDDI_ASSET_ROOT/FDDI_*_DIR for offline use, or install the "
+            "optional ModelScope dependency."
+        )
+    return snapshot_download(model_id)
 
-# 2. 下载 Stable Diffusion 基础模型仓库 (cleansd)
-# 如果魔塔上 xichen 下确实有 cleansd 这个仓库，则单独下载
-sd_dir = snapshot_download('xichen/cleansd') 
+
+# FDDI is the application being run; it must not download a copy of itself.
+# The two external model repositories can be replaced with local paths for
+# offline evaluation by setting FDDI_MIMICBRUSH_DIR and FDDI_SD_DIR.
+mimic_dir = resolve_model_dir("FDDI_MIMICBRUSH_DIR", "xichen/MimicBrush")
+sd_dir = resolve_model_dir("FDDI_SD_DIR", "xichen/cleansd")
 
 # --- 重新映射路径 (对应你截图中的实际结构) ---
 # 注意：snapshot_download 返回的路径就是仓库根目录
@@ -84,7 +124,7 @@ transform = Compose([
     NormalizeImage(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     PrepareForNet(),
 ])
-depth_anything_model.load_state_dict(torch.load(depth_model_path))
+depth_anything_model.load_state_dict(torch.load(depth_model_path, map_location="cpu"))
 
 
 
@@ -195,9 +235,6 @@ dc_unet = UNet2DConditionModel_DC.from_pretrained(base_model_path, subfolder="un
 from DeepCache.DeepCache.sd.apply_dyna import inject_dynamask_processor
 
 
-inject_dynamask_processor(dc_unet)
-
-
 pipe = MimicBrushPipeline.from_pretrained(
     base_model_path,
     torch_dtype=dtype,
@@ -225,6 +262,7 @@ depth_guider = DepthGuider()
 referencenet = ReferenceNet.from_pretrained(ref_model_path, subfolder="unet").to(dtype=dtype)
 mimicbrush_model = MimicBrush_RefNet(pipe, image_encoder_path, mimicbrush_ckpt,  depth_anything_model, depth_guider, referencenet, device)
 dc_mimicbrush_model = MimicBrush_RefNet(dc_pipe, image_encoder_path, mimicbrush_ckpt, depth_anything_model, depth_guider, referencenet, device)
+inject_dynamask_processor(dc_mimicbrush_model.pipe.unet)
 mask_processor = VaeImageProcessor(vae_scale_factor=1, do_normalize=False, do_binarize=True, do_convert_grayscale=True)
 
 using_deepcache = True
@@ -472,4 +510,5 @@ with gr.Blocks(css=custom_css) as demo:
                               outputs=[choose_model_button]
                         )
 
-demo.launch(server_name="0.0.0.0")
+if __name__ == "__main__":
+    demo.launch(server_name="0.0.0.0")

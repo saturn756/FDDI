@@ -6,6 +6,7 @@ def inject_dynamask_processor(unet):
     遍历 UNet，将所有的 Self-Attention 层的 Processor 替换为 DynaMaskAttnProcessor
     """
     print("🚀 Injecting DynaMask Processors into U-Net...")
+    unet._fddi_dynamask_enabled = True
     
     count = 0
     # 遍历 U-Net 的所有子模块

@@ -10,9 +10,26 @@ class DynaMaskAttnProcessor:
         self.current_timestep = None
         self.lpf_threshold = 0
         self.mask_index_cache = {}
+        self._mask_signature = None
 
     # 一个专门的方法，供 U-Net 调用来设置状态
     def set_state(self, mask, timestep, threshold):
+        # Processors live on the UNet across requests. A cache keyed only by
+        # sequence length would otherwise reuse the previous request's mask.
+        if torch.is_tensor(mask):
+            mask_signature = (
+                mask.data_ptr(),
+                tuple(mask.shape),
+                str(mask.device),
+                str(mask.dtype),
+            )
+        else:
+            mask_signature = None
+        if mask_signature != self._mask_signature:
+            self.bg_cache = None
+            self.mask_index_cache.clear()
+            self._mask_signature = mask_signature
+
         self.current_mask = mask
         self.current_timestep = timestep
         self.lpf_threshold = threshold

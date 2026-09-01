@@ -18,6 +18,15 @@ else:
 from .resampler import LinearResampler
 
 
+def configure_unet_attention(unet):
+    """Set MimicBrush defaults without replacing an installed DeepCache processor."""
+    if getattr(unet, "_fddi_dynamask_enabled", False):
+        return
+    processors = getattr(unet, "attn_processors", {}).values()
+    if not any(hasattr(processor, "set_state") for processor in processors):
+        unet.set_attn_processor(AttnProcessor())
+
+
 
 class MimicBrush_RefNet:
     def __init__(self, sd_pipe, image_encoder_path, model_ckpt, depth_estimator, depth_guider,referencenet, device):
@@ -29,7 +38,7 @@ class MimicBrush_RefNet:
         self.depth_estimator = depth_estimator.to(self.device).eval()
         self.depth_guider = depth_guider.to(self.device, dtype=torch.float16)
         self.pipe = sd_pipe.to(self.device)
-        self.pipe.unet.set_attn_processor(AttnProcessor())
+        configure_unet_attention(self.pipe.unet)
 
         # load image encoder
         self.image_encoder = CLIPVisionModelWithProjection.from_pretrained(self.image_encoder_path).to(
@@ -164,6 +173,6 @@ class MimicBrush_RefNet_inputmodel(MimicBrush_RefNet):
         self.image_proj_model = image_proj_model.to(self.device, dtype=torch.float16)
         self.referencenet = referencenet.to(self.device, dtype=torch.float16)
         self.pipe = sd_pipe.to(self.device)
-        self.pipe.unet.set_attn_processor(AttnProcessor())
+        configure_unet_attention(self.pipe.unet)
         self.referencenet.set_attn_processor(AttnProcessor())
         self.clip_image_processor = CLIPImageProcessor()

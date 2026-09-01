@@ -14,3 +14,32 @@ venv/
 .DS_Store
 .vscode/
 .idea/
+
+# Generated runtime artifacts
+*.log
+*.jsonl
+outputs/
+results/raw/
+
+# External FDDI runtime assets (keep outside the source repository)
+FDDI_assets/
+assets_runtime/
+modelscope/
+checkpoints/
+weights/
+*.bin
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+*.tar
+*.tar.xz
+*.zip
+.env
+.env.*
+!.env.example
+/cache/
+/outputs/
+/results/
+/test-vis/
+/temp_fid_crops/
