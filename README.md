@@ -1,9 +1,10 @@
-# FDDI: Fast MimicBrush with DeepCache
+# FDDI: Frequency-Decoupled Detail Injection for Fast MimicBrush
 
 [English](README.md) | [中文](README_zh.md)
 
-FDDI is a research implementation for reference-guided image editing and
-industrial anomaly image generation. It is built from the original
+FDDI stands for **Frequency-Decoupled Detail Injection**. It is a training-free
+acceleration framework for reference-guided image editing and zero-shot
+industrial defect generation. FDDI is built from the original
 [MimicBrush](https://github.com/ali-vilab/MimicBrush) inference code and
 integrates [DeepCache](https://github.com/horseee/DeepCache) into the
 MimicBrush denoising pipeline.
@@ -20,13 +21,67 @@ estimator, a depth guider, and ReferenceNet.
 
 ## Method
 
-The FDDI implementation contains the following components:
+### What FDDI solves
 
-- MimicBrush reference-image imitation and ReferenceNet feature injection.
-- DeepCache feature reuse during the diffusion denoising process.
-- DynaMask self-attention acceleration in the refinement phase.
-- Full cross-attention for reference and prompt information.
-- Depth Anything and a depth guider for optional shape control.
+The input is a normal source image `I_src`, a reference image `I_ref` that
+contains the desired defect appearance, and a binary edit mask `M`. The goal is
+to transfer the reference texture into `M` while keeping the unmasked source
+background unchanged. MimicBrush provides the reference-image imitation and
+ReferenceNet feature injection, while the Stable Diffusion v1.5 inpainting
+U-Net performs the image generation.
+
+DeepCache accelerates diffusion by reusing deep U-Net features at neighboring
+denoising steps. This is effective for stable low-frequency structure, but
+directly reusing the same feature also reuses stale high-frequency texture. In
+industrial images, that can make defect edges and fine surface texture blurry.
+
+FDDI separates these two behaviors in the refinement stage. At every step, the
+shallow encoder and its skip connections are freshly computed, while the deep
+branch can be reused from the cache. Inside the edit mask, FDDI cleans the
+cached structural signal and strengthens the fresh detail signal.
+
+### The two FDDI streams
+
+1. **Masked LPF, the structure stream.** Let `F_cache` be the reused deep
+   feature. FDDI applies a Gaussian low-pass filter only inside `M`, then blends
+   it with the original cache:
+
+   ```text
+   F_clean = (1 - alpha) * F_cache + alpha * GaussianBlur(F_cache)
+   ```
+
+   Outside the mask, the cached feature is kept unchanged to preserve the
+   source background. This removes stale texture variation while retaining the
+   stable structure carried by the cache.
+
+2. **Skip Connect Booster, the texture stream.** Let `S_fresh` be the current
+   step's freshly computed skip features. FDDI multiplies them by a gain only
+   inside `M`:
+
+   ```text
+   S_boost = S_fresh * (1 + M * (lambda - 1))
+   ```
+
+   The paper uses `lambda = 1.4`, so current high-frequency information is
+   injected into the defect region without sharpening the background.
+
+The refinement window is defined by the diffusion timestep `t < 200` in the
+1,000-step training schedule. Cross-attention remains dense so reference-image
+conditioning is not discarded. The released accelerated path also contains
+DynaMask sparse self-attention in this window; it is an implementation-level
+runtime optimization, not a separately ablated FDDI module in the paper.
+
+### Inference flow
+
+1. Encode `I_ref` with the image encoder and ReferenceNet; estimate optional
+   shape information with Depth Anything and Depth Guider.
+2. Start the Stable Diffusion inpainting denoising process from `I_src` and
+   `M`.
+3. Use DeepCache with the paper's uniform 1:20 cache schedule. On cache reuse
+   steps, apply Masked LPF to the reused deep feature and Skip Connect Booster
+   to the fresh skip features when `t < 200`.
+4. Decode the denoised latent to obtain the edited industrial image, then merge
+   the generated region with the unmasked source image.
 
 The DeepCache integration is implemented directly in the FDDI source tree. The
 original and accelerated pipelines can be selected from the Gradio interface.
@@ -43,13 +98,6 @@ applies Masked LPF to the refinement stream, and boosts fresh skip-connection
 features inside the edit mask.
 
 ![FDDI architecture](docs/assets/fddi_structure.png)
-
-At a high level, FDDI separates the cached structural stream from fresh detail
-features during the refinement window `t < 200`: Masked LPF cleans cached
-features inside the edit mask, while Skip Connect Booster amplifies current
-skip features in the same region. The paper configuration uses 40 DDIM steps,
-a uniform 1:20 cache schedule, LPF `(kernel=3, sigma=0.8, alpha=0.5)`, and a
-Booster factor of `1.4`.
 
 ## Repository layout
 

@@ -1,9 +1,10 @@
-# FDDI：基于 DeepCache 的快速 MimicBrush
+# FDDI：频率解耦细节注入加速框架
 
 [English](README.md) | 中文
 
-FDDI 是一个用于参考图像引导编辑和工业异常图像生成的科研实现。项目
-直接基于原始
+FDDI 是 **Frequency-Decoupled Detail Injection** 的缩写，中文为“频率
+解耦细节注入”。它是一个无需训练的加速框架，用于参考图像引导编辑和
+零样本工业缺陷生成。项目直接基于原始
 [MimicBrush](https://github.com/ali-vilab/MimicBrush) 推理代码，并将
 [DeepCache](https://github.com/horseee/DeepCache) 集成到 MimicBrush 的
 扩散去噪流程中。
@@ -18,25 +19,64 @@ Depth Guider 和 ReferenceNet。
 
 ## 方法概述
 
-FDDI 的主要组成部分如下：
+### FDDI 解决什么问题
 
-- MimicBrush 的参考图像模仿和 ReferenceNet 特征注入。
-- 在扩散去噪过程中复用 DeepCache 特征。
-- 在 refinement 阶段使用 DynaMask 加速自注意力。
-- 保持交叉注意力的完整计算，以保留参考图像和文本提示信息。
-- 使用 Depth Anything 和 Depth Guider 实现可选的形状控制。
+输入包括一张正常源图像 `I_src`、一张包含目标缺陷外观的参考图像
+`I_ref`，以及一个二值编辑掩码 `M`。目标是在 `M` 区域内迁移参考图像的
+缺陷纹理，同时保持掩码外的源图像背景不变。MimicBrush 负责参考图像
+模仿和 ReferenceNet 特征注入，Stable Diffusion v1.5 inpainting U-Net
+负责最终生成。
+
+DeepCache 通过在相邻扩散时间步复用 U-Net 深层特征来加速推理。这对稳定
+的低频结构有效，但直接复用同一特征也会复用过时的高频纹理。在工业图像
+中，这可能导致缺陷边缘模糊、表面细节丢失。
+
+FDDI 在精细化阶段将这两类信息分开处理：浅层编码器和跳跃连接在当前时间
+步重新计算，深层分支则可以从缓存中复用。在编辑区域内，FDDI 清洗缓存中
+的结构信号，并增强当前时间步的新鲜细节信号。
+
+### FDDI 的两条信息流
+
+1. **掩码引导的 LPF：结构流。** 设 `F_cache` 为复用的深层特征。FDDI
+   只在掩码 `M` 内应用高斯低通滤波，并与原始缓存进行融合：
+
+   ```text
+   F_clean = (1 - alpha) * F_cache + alpha * GaussianBlur(F_cache)
+   ```
+
+   掩码外的缓存特征保持不变，以保护源图像背景。该操作去除过时的纹理
+   变化，同时保留缓存中的稳定结构信息。
+
+2. **Skip Connect Booster：纹理流。** 设 `S_fresh` 为当前时间步重新
+   计算的跳跃连接特征。FDDI 只在掩码 `M` 内对其进行增益放大：
+
+   ```text
+   S_boost = S_fresh * (1 + M * (lambda - 1))
+   ```
+
+   论文使用 `lambda = 1.4`，因此可以向缺陷区域注入当前时间步的新鲜高频
+   信息，同时避免增强背景。
+
+FDDI 的精细化窗口定义为 1,000 步训练时间表中的 `t < 200`。交叉注意力
+保持完整计算，以保留参考图像条件。当前加速管线还包含这一窗口内的
+DynaMask 稀疏自注意力，它属于实现层运行时优化，并未在论文消融表中作为
+独立的 FDDI 模块报告。
+
+### 推理流程
+
+1. 使用图像编码器和 ReferenceNet 编码 `I_ref`；如果需要保持形状，则使用
+   Depth Anything 和 Depth Guider 提取形状信息。
+2. 以 `I_src` 和 `M` 为条件，启动 Stable Diffusion inpainting 去噪过程。
+3. 使用论文中的均匀 1:20 DeepCache 缓存策略。在缓存复用步骤中，当
+   `t < 200` 时，对复用的深层特征应用掩码 LPF，并对新鲜跳跃连接特征应用
+   Booster。
+4. 将去噪后的 latent 解码为工业图像，再把生成区域与未编辑的源图像合并。
 
 DeepCache 集成代码直接保存在 FDDI 源码树中。Gradio 界面可以在原始
 MimicBrush 管线和加速管线之间切换，默认使用 DeepCache。
 
 论文对应的实现细节、统一配置、论文中报告的结果表和复现流程见
 [`docs/PAPER_REPRODUCTION.md`](docs/PAPER_REPRODUCTION.md)。
-
-从整体上看，FDDI 在精细化阶段 `t < 200` 将缓存的结构流与当前步的细节
-特征分开处理：掩码引导的 LPF 只清洗编辑区域内的缓存特征，Skip Connect
-Booster 则增强同一区域的新鲜跳跃连接特征。论文配置为 40 步 DDIM、均匀
-1:20 缓存策略、LPF `(kernel=3, sigma=0.8, alpha=0.5)` 和 Booster 系数
-`1.4`。
 
 ![Baseline、DeepCache 与 FDDI 定性对比](docs/assets/fddi_comparison_grid.png)
 
