@@ -30,8 +30,7 @@ DeepCache 集成代码直接保存在 FDDI 源码树中。Gradio 界面可以在
 MimicBrush 管线和加速管线之间切换，默认使用 DeepCache。
 
 论文对应的实现细节、统一配置、论文中报告的结果表和复现流程见
-[`docs/PAPER_REPRODUCTION.md`](docs/PAPER_REPRODUCTION.md)。论文作者为
-周树帆、孙铭杰，单位为苏州大学计算机科学与技术学院。
+[`docs/PAPER_REPRODUCTION.md`](docs/PAPER_REPRODUCTION.md)。
 
 从整体上看，FDDI 在精细化阶段 `t < 200` 将缓存的结构流与当前步的细节
 特征分开处理：掩码引导的 LPF 只清洗编辑区域内的缓存特征，Skip Connect
@@ -79,8 +78,6 @@ FDDI/
 - Transformers 4.26.1
 - Gradio 4.44.1
 - 16 GB 显存的 NVIDIA GPU
-
-科研服务器使用的 Conda 环境名称为 `mimicbrush`。
 
 ## 安装
 
@@ -208,17 +205,6 @@ DeepCache 结果的并排对比图。
 - 加速管线中还包含 DynaMask 稀疏自注意力，这是实现层的运行时优化；论文
   消融表没有将其单独报告为组件。修改该路径后，需要重新跑基准，不能直接
   沿用论文数字。
-
-## 引用
-
-```bibtex
-@misc{zhou2026fddi,
-  title  = {面向零样本工业缺陷生成的频率解耦细节注入加速网络},
-  author = {Shufan Zhou and Mingjie Sun},
-  year   = {2026},
-  note   = {Research manuscript, Soochow University}
-}
-```
 
 ## 协议和第三方条款
 

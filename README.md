@@ -34,9 +34,7 @@ The default mode is DeepCache.
 
 The paper-aligned implementation details, configuration, reported tables, and
 reproduction procedure are collected in
-[`docs/PAPER_REPRODUCTION.md`](docs/PAPER_REPRODUCTION.md). The paper is by
-Shufan Zhou and Mingjie Sun from the School of Computer Science and Technology,
-Soochow University.
+[`docs/PAPER_REPRODUCTION.md`](docs/PAPER_REPRODUCTION.md).
 
 ![Qualitative comparison of the baseline, DeepCache, and FDDI](docs/assets/fddi_comparison_grid.png)
 
@@ -86,8 +84,6 @@ The current implementation has been tested in the following environment:
 - Transformers 4.26.1
 - Gradio 4.44.1
 - NVIDIA GPU with 16 GB memory
-
-The environment name used on the research server is `mimicbrush`.
 
 ## Installation
 
@@ -221,17 +217,6 @@ Hugging Face cache. It writes a side-by-side baseline/DeepCache comparison.
 - DynaMask sparse self-attention is included as an implementation-level
   runtime optimization. It was not separately reported in the paper ablation
   table, so new benchmark claims should be rerun after changing this path.
-
-## Citation
-
-```bibtex
-@misc{zhou2026fddi,
-  title  = {面向零样本工业缺陷生成的频率解耦细节注入加速网络},
-  author = {Shufan Zhou and Mingjie Sun},
-  year   = {2026},
-  note   = {Research manuscript, Soochow University}
-}
-```
 
 ## License and third-party terms
 

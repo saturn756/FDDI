@@ -4,12 +4,6 @@ This document records the implementation settings and reported results for
 the paper **Frequency-Decoupled Detail Injection (FDDI) for Zero-Shot
 Industrial Defect Generation**.
 
-## Authors
-
-- Shufan Zhou
-- Mingjie Sun
-- School of Computer Science and Technology, Soochow University, China
-
 The source paper is written in Chinese as
 `面向零样本工业缺陷生成的频率解耦细节注入加速网络`.
 
